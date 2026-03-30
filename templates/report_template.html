@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMR 时间戳考古报告</title>
+    <style>
+        /* ========================================
+           EMR Timestamp Archaeologist - 考古学主题样式
+           ======================================== */
+
+        /* CSS 变量定义 - 考古学主题色彩 */
+        :root {
+            --primary-color: #8B4513;        /* 陶土棕 - 主色 */
+            --primary-light: #A0522D;       /* 浅陶土 */
+            --secondary-color: #D2691E;     /* 巧克力色 */
+            --accent-gold: #DAA520;          /* 金色点缀 */
+            --accent-blue: #2F4F4F;          /* 深青灰 - 文物蓝 */
+            --bg-light: #FDF5E6;             /* 老纸色背景 */
+            --bg-cream: #FAF0E6;            /* 奶油色 */
+            --text-primary: #3E2723;         /* 深褐色文字 */
+            --text-secondary: #5D4037;       /* 中褐色文字 */
+            --border-color: #8B7355;         /* 边框色 */
+            --shadow-color: rgba(62, 39, 35, 0.15);
+
+            /* 异常类型颜色 */
+            --batch-color: #FF5722;
+            --night-color: #9C27B0;
+            --contradiction-color: #F44336;
+            --sequence-color: #FF9800;
+            --anchor-color: #E91E63;
+
+            /* 风险等级颜色 */
+            --risk-low: #4CAF50;
+            --risk-medium: #FFC107;
+            --risk-high: #FF9800;
+            --risk-critical: #F44336;
+        }
+
+        /* 暗色模式变量 */
+        [data-theme="dark"] {
+            --bg-light: #2C2416;
+            --bg-cream: #3E3222;
+            --text-primary: #F5F0E6;
+            --text-secondary: #C4B998;
+            --border-color: #6B5B45;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 重置与基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background: var(--bg-light);
+            min-height: 100vh;
+        }
+
+        /* 容器布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 - 目录 */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: #FDF5E6;
+            padding: 30px 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 4px 0 15px var(--shadow-color);
+        }
+
+        .sidebar::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .sidebar-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .sidebar-logo h1 {
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .sidebar-logo .subtitle {
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .toc-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 3px solid var(--accent-gold);
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 8px;
+        }
+
+        .toc-list a {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .toc-list a:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            transform: translateX(5px);
+        }
+
+        .toc-list a .icon {
+            margin-right: 10px;
+            font-size: 1.1em;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px 40px;
+        }
+
+        /* 报告头部 */
+        .report-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: #FDF5E6;
+            padding: 50px 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 30px var(--shadow-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .report-header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+        }
+
+        .report-header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-bottom: 15px;
+        }
+
+        .report-header .meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 0.95em;
+            opacity: 0.85;
+        }
+
+        .report-header .meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 分区样式 */
+        .section {
+            background: var(--bg-cream);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--accent-gold);
+        }
+
+        .section-header .icon {
+            font-size: 1.8em;
+            margin-right: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 1.6em;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        /* 风险仪表盘 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .dashboard-left {
+            text-align: center;
+        }
+
+        .risk-gauge {
+            position: relative;
+            width: 280px;
+            height: 160px;
+            margin: 0 auto;
+        }
+
+        .risk-gauge svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-background {
+            fill: none;
+            stroke: #e0e0e0;
+            stroke-width: 20;
+            stroke-linecap: round;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke-width: 20;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+
+        .gauge-value {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .gauge-value .number {
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .gauge-value .label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .risk-level-badge {
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-top: 15px;
+            color: #fff;
+        }
+
+        .dashboard-right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .stat-card .value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1.2;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* 异常类型分布 */
+        .anomaly-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .type-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #fff;
+            border-radius: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .type-badge:hover {
+            transform: translateY(-2px);
+        }
+
+        .type-badge .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+
+        .type-badge .count {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .type-badge .name {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        /* 可视化容器 */
+        .visualization-container {
+            background: #fff;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        .visualization-container svg {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* 时序地层图样式 */
+        .stratum-map-container {
+            background: linear-gradient(to bottom, #FAFAFA, #F0F0F0);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .stratum-legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .legend-item .swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        /* 夜间活动图表 */
+        .night-chart-container {
+            position: relative;
+        }
+
+        .night-zone {
+            position: absolute;
+            top: 50px;
+            height: 120px;
+            background: rgba(156, 39, 176, 0.08);
+            border-left: 2px dashed rgba(156, 39, 176, 0.4);
+            border-right: 2px dashed rgba(156, 39, 176, 0.4);
+        }
+
+        .night-zone-label {
+            position: absolute;
+            top: 5px;
+            font-size: 0.75em;
+            color: #9C27B0;
+            font-weight: 600;
+        }
+
+        /* 异常卡片列表 */
+        .anomaly-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .anomaly-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .anomaly-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+
+        .anomaly-card[data-severity="严重"] { border-left-color: var(--risk-critical); }
+        .anomaly-card[data-severity="中等"] { border-left-color: var(--risk-high); }
+        .anomaly-card[data-severity="轻微"] { border-left-color: var(--risk-medium); }
+        .anomaly-card[data-severity="提示"] { border-left-color: var(--risk-low); }
+
+        .anomaly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .anomaly-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .anomaly-type .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #fff;
+        }
+
+        .anomaly-type .name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: var(--text-primary);
+        }
+
+        .severity-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .severity-badge.严重 { background: var(--risk-critical); }
+        .severity-badge.中等 { background: var(--risk-high); }
+        .severity-badge.轻微 { background: var(--risk-medium); }
+        .severity-badge.提示 { background: var(--risk-low); }
+
+        .anomaly-description {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .anomaly-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .anomaly-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .anomaly-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .anomaly-details summary {
+            cursor: pointer;
+            color: var(--primary-color);
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .anomaly-details pre {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            font-size: 0.85em;
+            overflow-x: auto;
+            border: 1px solid #eee;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 4em;
+            opacity: 0.3;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            font-style: italic;
+        }
+
+        /* 页脚 */
+        .report-footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            border-top: 2px solid var(--border-color);
+            margin-top: 30px;
+        }
+
+        .report-footer .logo {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .report-footer p {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .report-footer .tech-info {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 15px;
+        }
+
+        /* SVG 通用样式 */
+        .map-title, .chart-title, .heatmap-title {
+            font-size: 18px;
+            font-weight: bold;
+            fill: var(--text-primary);
+        }
+
+        .tick-label, .layer-label, .hour-label {
+            font-size: 11px;
+            fill: var(--text-secondary);
+        }
+
+        .anchor-label {
+            font-size: 11px;
+            font-weight: bold;
+            fill: var(--anchor-color);
+        }
+
+        .score-value {
+            font-size: 42px;
+            font-weight: bold;
+            fill: var(--text-primary);
+        }
+
+        .score-label {
+            font-size: 14px;
+            fill: var(--text-secondary);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-content {
+                margin-left: 240px;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .report-header h1 {
+                font-size: 1.8em;
+            }
+            .report-header .meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .section {
+                padding: 20px;
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                background: white;
+            }
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 0;
+            }
+            .section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .anomaly-card:hover {
+                transform: none;
+            }
+            .visualization-container {
+                overflow: visible;
+            }
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s, background 0.3s;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- 主题切换按钮 -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换明暗主题">🌙</button>
+
+    <div class="container">
+        <!-- 侧边栏目录 -->
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <div class="sidebar-logo">
+                    <h1>🕐 EMR考古器</h1>
+                    <p class="subtitle">病历时间戳真实性审计</p>
+                </div>
+
+                <nav class="toc">
+                    <h3 class="toc-title">目录导航</h3>
+                    <ul class="toc-list">
+                        <li>
+                            <a href="#summary">
+                                <span class="icon">📊</span>
+                                <span>风险概览</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#stratum">
+                                <span class="icon">�层</span>
+                                <span>时序地层图</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#anomaly-timeline">
+                                <span class="icon">⏱️</span>
+                                <span>异常时间线</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#batch">
+                                <span class="icon">🔥</span>
+                                <span>批处理热力图</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#night">
+                                <span class="icon">🌙</span>
+                                <span>夜间活动分析</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#anomalies">
+                                <span class="icon">⚠️</span>
+                                <span>异常详情</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 报告头部 -->
+            <header class="report-header">
+                <h1>🕐 EMR 时间戳考古报告</h1>
+                <p class="subtitle">电子病历时间戳真实性审计分析</p>
+                <div class="meta">
+                    <span>📅 生成时间: <span id="generated-time">2024-01-15 10:30:00</span></span>
+                    <span>📁 样本量: <span id="record-count">1,234</span> 条记录</span>
+                    <span>🔍 检测器: <span id="detector-count">5</span> 个</span>
+                </div>
+            </header>
+
+            <!-- 风险概览 -->
+            <section id="summary" class="section">
+                <div class="section-header">
+                    <span class="icon">📊</span>
+                    <h2>风险概览</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-left">
+                        <div class="risk-gauge">
+                            <svg viewBox="0 0 280 160">
+                                <!-- 背景弧 -->
+                                <path class="gauge-background"
+                                    d="M 30 140 A 110 110 0 0 1 250 140" />
+                                <!-- 风险分数弧 -->
+                                <path id="risk-arc" class="gauge-fill"
+                                    stroke="var(--risk-medium)"
+                                    stroke-dasharray="345.57"
+                                    stroke-dashoffset="172.78"
+                                    d="M 30 140 A 110 110 0 0 1 250 140" />
+                            </svg>
+                            <div class="gauge-value">
+                                <div class="number" id="risk-score">50</div>
+                                <div class="label">风险分数</div>
+                            </div>
+                        </div>
+                        <span id="risk-level-badge" class="risk-level-badge" style="background: var(--risk-medium);">中等风险</span>
+                    </div>
+
+                    <div class="dashboard-right">
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <div class="value" id="total-records">0</div>
+                                <div class="label">分析记录</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value" id="total-anomalies">0</div>
+                                <div class="label">检测异常</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value" id="severe-count">0</div>
+                                <div class="label">严重异常</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value" id="type-count">0</div>
+                                <div class="label">异常类型</div>
+                            </div>
+                        </div>
+
+                        <div class="section" style="margin-bottom: 0;">
+                            <h4 style="margin-bottom: 12px; color: var(--text-secondary);">异常类型分布</h4>
+                            <div class="anomaly-types" id="anomaly-types">
+                                <!-- 由 JavaScript 动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 时序地层图 -->
+            <section id="stratum" class="section">
+                <div class="section-header">
+                    <span class="icon">📚</span>
+                    <h2>时序地层图</h2>
+                </div>
+                <p class="section-desc">横向为时间轴，纵向为不同病历章节的地层分布。蓝色节点为正常记录，红色节点为检测到异常的记录。</p>
+                <div class="visualization-container">
+                    <div id="stratum-map" class="stratum-map-container">
+                        <!-- SVG 地层图由 JavaScript 动态渲染 -->
+                    </div>
+                    <div class="stratum-legend">
+                        <div class="legend-item">
+                            <div class="swatch" style="background: #2196F3;"></div>
+                            <span>正常记录</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="swatch" style="background: #F44336;"></div>
+                            <span>异常记录</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="swatch" style="background: #E91E63; height: 3px; border-radius: 2px;"></div>
+                            <span>业务锚点</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 异常时间线 -->
+            <section id="anomaly-timeline" class="section">
+                <div class="section-header">
+                    <span class="icon">⏱️</span>
+                    <h2>异常时间线</h2>
+                </div>
+                <p class="section-desc">所有检测到的异常按时间顺序排列，节点大小表示严重程度。</p>
+                <div class="visualization-container">
+                    <div id="anomaly-timeline-chart">
+                        <!-- SVG 异常时间线由 JavaScript 动态渲染 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 批处理热力图 -->
+            <section id="batch" class="section">
+                <div class="section-header">
+                    <span class="icon">🔥</span>
+                    <h2>批处理痕迹热力图</h2>
+                </div>
+                <p class="section-desc">检测同一时间段内多份病历时间戳完全相同的批处理痕迹。色块越高表示受影响记录越多。</p>
+                <div class="visualization-container">
+                    <div id="batch-heatmap-chart">
+                        <!-- SVG 批处理热力图由 JavaScript 动态渲染 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 夜间活动分析 -->
+            <section id="night" class="section">
+                <div class="section-header">
+                    <span class="icon">🌙</span>
+                    <h2>夜间活动分析</h2>
+                </div>
+                <p class="section-desc">统计 22:00-05:00 时段的病历创建/修改活动，深色柱状表示夜间时段。</p>
+                <div class="visualization-container night-chart-container" id="night-chart">
+                    <!-- SVG 夜间活动图由 JavaScript 动态渲染 -->
+                </div>
+            </section>
+
+            <!-- 异常详情 -->
+            <section id="anomalies" class="section">
+                <div class="section-header">
+                    <span class="icon">⚠️</span>
+                    <h2>异常详情</h2>
+                </div>
+                <p class="section-desc">以下列出所有检测到的异常，按严重程度排序。点击卡片可展开查看详细证据。</p>
+                <div class="anomaly-list" id="anomaly-list">
+                    <!-- 异常卡片由 JavaScript 动态渲染 -->
+                </div>
+            </section>
+
+            <!-- 页脚 -->
+            <footer class="report-footer">
+                <p class="logo">🕐 EMR Timestamp Archaeologist</p>
+                <p>病历时间戳考古器 | EMR Timestamp Archaeology Tool</p>
+                <p>本报告由 AI 自动生成，仅供辅助参考</p>
+                <p class="tech-info">
+                    技术支持: Python + TypeScript/Node.js | 报告生成时间: <span id="footer-time"></span>
+                </p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // ========================================
+        // EMR 考古报告 - 交互脚本
+        // ========================================
+
+        // 主题切换
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            const currentTheme = body.getAttribute('data-theme');
+
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                button.textContent = '🌙';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                button.textContent = '☀️';
+            }
+        }
+
+        // 示例数据初始化（实际使用时由 Python 端注入）
+        const reportData = {
+            generatedAt: new Date().toLocaleString('zh-CN'),
+            totalRecords: 1234,
+            detectorCount: 5,
+            riskScore: 67,
+            riskLevel: '高',
+            totalAnomalies: 89,
+            severeCount: 12,
+            anomalyTypes: {
+                'batch_processing': { count: 35, name: '批处理痕迹' },
+                'night_rush': { count: 28, name: '夜间突击补写' },
+                'time_contradiction': { count: 15, name: '时间线矛盾' },
+                'suspicious_sequence': { count: 8, name: '异常修改序列' },
+                'anchor_violation': { count: 3, name: '锚点违规' }
+            },
+            anomalies: [
+                {
+                    id: 1,
+                    type: 'batch_processing',
+                    typeName: '批处理痕迹',
+                    severity: 8,
+                    severityLabel: '严重',
+                    description: '检测到 5 份病历在 2024-01-10 14:32:15 时间戳完全相同',
+                    affectedRecords: ['R001', 'R002', 'R003', 'R004', 'R005'],
+                    evidence: { timestamp: '2024-01-10 14:32:15', identicalCount: 5, department: '内科' }
+                },
+                {
+                    id: 2,
+                    type: 'night_rush',
+                    typeName: '夜间突击补写',
+                    severity: 7,
+                    severityLabel: '中等',
+                    description: '内科在 22:00-05:00 时段有 12 份病历被集中创建/修改',
+                    affectedRecords: ['R010', 'R011', 'R012', 'R013', 'R014', 'R015'],
+                    evidence: { nightCount: 12, totalCount: 45, ratio: 0.27, peakHour: 23 }
+                },
+                {
+                    id: 3,
+                    type: 'time_contradiction',
+                    typeName: '时间线矛盾',
+                    severity: 9,
+                    severityLabel: '严重',
+                    description: '手术记录创建时间（10:15）早于手术开始时间（14:30）',
+                    affectedRecords: ['R020'],
+                    evidence: { recordTime: '2024-01-12 10:15:00', anchorTime: '2024-01-12 14:30:00', violation: 'ANCHOR_VIOLATION' }
+                }
+            ]
+        };
+
+        // 渲染风险仪表盘
+        function renderRiskDashboard() {
+            const score = reportData.riskScore;
+            const riskLevel = reportData.riskLevel;
+
+            // 更新风险分数
+            document.getElementById('risk-score').textContent = score;
+
+            // 计算弧长
+            const circumference = 2 * Math.PI * 110;
+            const offset = circumference * (1 - score / 100);
+            const riskArc = document.getElementById('risk-arc');
+            riskArc.style.strokeDashoffset = offset;
+
+            // 设置颜色
+            let color;
+            if (score < 30) color = 'var(--risk-low)';
+            else if (score < 50) color = 'var(--risk-medium)';
+            else if (score < 70) color = 'var(--risk-high)';
+            else color = 'var(--risk-critical)';
+
+            riskArc.style.stroke = color;
+
+            // 更新风险等级徽章
+            const badge = document.getElementById('risk-level-badge');
+            badge.textContent = riskLevel + '风险';
+            badge.style.background = color;
+
+            // 更新统计数据
+            document.getElementById('total-records').textContent = reportData.totalRecords.toLocaleString();
+            document.getElementById('total-anomalies').textContent = reportData.totalAnomalies;
+            document.getElementById('severe-count').textContent = reportData.severeCount;
+
+            const typeCount = Object.keys(reportData.anomalyTypes).length;
+            document.getElementById('type-count').textContent = typeCount;
+        }
+
+        // 渲染异常类型分布
+        function renderAnomalyTypes() {
+            const container = document.getElementById('anomaly-types');
+            const colors = {
+                'batch_processing': 'var(--batch-color)',
+                'night_rush': 'var(--night-color)',
+                'time_contradiction': 'var(--contradiction-color)',
+                'suspicious_sequence': 'var(--sequence-color)',
+                'anchor_violation': 'var(--anchor-color)'
+            };
+
+            let html = '';
+            for (const [type, data] of Object.entries(reportData.anomalyTypes)) {
+                if (data.count > 0) {
+                    html += `
+                        <div class="type-badge">
+                            <div class="dot" style="background: ${colors[type]};"></div>
+                            <span class="count">${data.count}</span>
+                            <span class="name">${data.name}</span>
+                        </div>
+                    `;
+                }
+            }
+            container.innerHTML = html || '<div class="empty-state"><p>未检测到异常类型</p></div>';
+        }
+
+        // 渲染异常卡片列表
+        function renderAnomalyList() {
+            const container = document.getElementById('anomaly-list');
+
+            if (!reportData.anomalies || reportData.anomalies.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">✓</div>
+                        <p>未检测到异常</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const colors = {
+                'batch_processing': 'var(--batch-color)',
+                'night_rush': 'var(--night-color)',
+                'time_contradiction': 'var(--contradiction-color)',
+                'suspicious_sequence': 'var(--sequence-color)',
+                'anchor_violation': 'var(--anchor-color)'
+            };
+
+            const icons = {
+                'batch_processing': '📋',
+                'night_rush': '🌙',
+                'time_contradiction': '⏰',
+                'suspicious_sequence': '🔄',
+                'anchor_violation': '⚓'
+            };
+
+            let html = '';
+            for (const anomaly of reportData.anomalies) {
+                const color = colors[anomaly.type] || '#999';
+                const icon = icons[anomaly.type] || '⚠️';
+                const affected = anomaly.affectedRecords.slice(0, 3).join(', ');
+                const more = anomaly.affectedRecords.length > 3
+                    ? `... (+${anomaly.affectedRecords.length - 3})`
+                    : '';
+
+                html += `
+                    <div class="anomaly-card" data-severity="${anomaly.severityLabel}">
+                        <div class="anomaly-header">
+                            <div class="anomaly-type">
+                                <div class="icon" style="background: ${color};">${icon}</div>
+                                <span class="name">${anomaly.typeName}</span>
+                            </div>
+                            <span class="severity-badge ${anomaly.severityLabel}">${anomaly.severityLabel} (${anomaly.severity}/10)</span>
+                        </div>
+                        <p class="anomaly-description">${anomaly.description}</p>
+                        <div class="anomaly-meta">
+                            <span>📁 受影响记录: ${affected}${more}</span>
+                        </div>
+                        <details class="anomaly-details">
+                            <summary>证据详情</summary>
+                            <pre>${JSON.stringify(anomaly.evidence, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // 渲染占位图表（实际使用时由 Python 端生成 SVG）
+        function renderPlaceholderCharts() {
+            // 这些在实际中会被 Python 的 report_renderer.py 生成的 SVG 替换
+            document.getElementById('stratum-map').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <p>时序地层图数据</p>
+                </div>
+            `;
+            document.getElementById('anomaly-timeline-chart').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">⏱️</div>
+                    <p>异常时间线数据</p>
+                </div>
+            `;
+            document.getElementById('batch-heatmap-chart').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🔥</div>
+                    <p>批处理热力图数据</p>
+                </div>
+            `;
+            document.getElementById('night-chart').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🌙</div>
+                    <p>夜间活动数据</p>
+                </div>
+            `;
+        }
+
+        // 初始化
+        function init() {
+            // 设置时间
+            document.getElementById('generated-time').textContent = reportData.generatedAt;
+            document.getElementById('record-count').textContent = reportData.totalRecords.toLocaleString();
+            document.getElementById('detector-count').textContent = reportData.detectorCount;
+            document.getElementById('footer-time').textContent = new Date().toLocaleString('zh-CN');
+
+            // 渲染组件
+            renderRiskDashboard();
+            renderAnomalyTypes();
+            renderAnomalyList();
+            renderPlaceholderCharts();
+
+            // 目录链接平滑滚动
+            document.querySelectorAll('.toc-list a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const target = document.getElementById(targetId);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            // 异常卡片交互
+            document.querySelectorAll('.anomaly-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const details = this.querySelector('.anomaly-details');
+                    if (details) {
+                        details.open = !details.open;
+                    }
+                });
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMR 时间戳考古报告</title>
+    
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.report-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 30px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.report-header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.2em;
+    opacity: 0.9;
+}
+
+.generated-time {
+    font-size: 0.9em;
+    opacity: 0.7;
+    margin-top: 10px;
+}
+
+.toc {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toc h2 {
+    margin-bottom: 15px;
+    color: #667eea;
+}
+
+.toc ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toc a {
+    color: #667eea;
+    text-decoration: none;
+    padding: 5px 15px;
+    background: #f0f0ff;
+    border-radius: 20px;
+    transition: background 0.3s;
+}
+
+.toc a:hover {
+    background: #667eea;
+    color: white;
+}
+
+.section {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section h2 {
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.section-desc {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.visualization-container {
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.dashboard-section {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.dashboard-container {
+    text-align: center;
+}
+
+.stats-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.type-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.type-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background: #f5f5f5;
+    border-radius: 20px;
+}
+
+.type-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.type-name {
+    color: #333;
+}
+
+.type-count {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.anomaly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.anomaly-card {
+    background: #fafafa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.anomaly-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.anomaly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.anomaly-type {
+    font-weight: bold;
+    color: #333;
+}
+
+.anomaly-severity {
+    color: white;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.anomaly-desc {
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.anomaly-meta {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.anomaly-details {
+    margin-top: 10px;
+}
+
+.anomaly-details summary {
+    cursor: pointer;
+    color: #667eea;
+    font-size: 0.9em;
+}
+
+.anomaly-details pre {
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    overflow-x: auto;
+    margin-top: 5px;
+}
+
+.empty-state {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-style: italic;
+}
+
+/* SVG 样式 */
+.stratum-map, .anomaly-timeline, .batch-heatmap, .night-chart, .risk-dashboard {
+    display: block;
+    max-width: 100%;
+}
+
+.map-title, .heatmap-title, .chart-title {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #333;
+}
+
+.tick-label, .layer-label, .hour-label {
+    font-size: 10px;
+    fill: #666;
+}
+
+.anchor-label {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.anomaly-type-label {
+    font-size: 8px;
+    fill: #333;
+}
+
+.count-label {
+    font-size: 10px;
+    font-weight: bold;
+    fill: #333;
+}
+
+.score-value {
+    font-size: 36px;
+    font-weight: bold;
+    fill: #333;
+}
+
+.score-label {
+    font-size: 14px;
+    fill: #666;
+}
+
+.risk-level {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.report-footer {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-size: 0.9em;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .report-header h1 {
+        font-size: 1.8em;
+    }
+
+    .dashboard-section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stats-grid {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    body {
+        background: white;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .toc {
+        display: none;
+    }
+
+    .section {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <h1>🕐 EMR 时间戳考古报告</h1>
+            <p class="subtitle">电子病历时间戳真实性审计分析</p>
+            <p class="generated-time">生成时间: 2026-03-31 02:56:03</p>
+        </header>
+
+        <nav class="toc">
+            <h2>目录</h2>
+            <ul>
+                <li><a href="#summary">风险概览</a></li>
+                <li><a href="#stratum">时序地层图</a></li>
+                <li><a href="#anomaly-timeline">异常时间线</a></li>
+                <li><a href="#batch">批处理热力图</a></li>
+                <li><a href="#night">夜间活动分析</a></li>
+                <li><a href="#anomalies">异常详情</a></li>
+            </ul>
+        </nav>
+
+        <section id="summary" class="section">
+            <h2>📊 风险概览</h2>
+            <div class="dashboard-section">
+                <div class="dashboard-container"><svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg" class="risk-dashboard">
+  <!-- 背景弧 -->
+  <path d="M 100 140 A 100 100 0 0 1 300 140" fill="none" stroke="#e0e0e0" stroke-width="20" stroke-linecap="round"/>
+  <!-- 分数弧 -->
+  <path d="M 100 140 A 100 100 0 0 1 300.0 140.0" fill="none" stroke="#F44336" stroke-width="20" stroke-linecap="round"/>
+  <!-- 分数文字 -->
+  <text x="200" y="130" text-anchor="middle" class="score-value">100.0</text>
+  <text x="200" y="160" text-anchor="middle" class="score-label">风险分数</text>
+  <text x="200" y="190" text-anchor="middle" class="risk-level" fill="#F44336">极高</text>
+  <!-- 刻度 -->
+  <line x1="130.0" y1="140.0" x2="120.0" y2="140.0" stroke="#999"/>
+  <line x1="143.36881039375368" y1="98.85503233952687" x2="135.27864045000422" y2="92.97717981660213" stroke="#999"/>
+  <line x1="178.36881039375368" y1="73.42604385933925" x2="175.27864045000422" y2="63.91547869638771" stroke="#999"/>
+  <line x1="221.63118960624632" y1="73.42604385933926" x2="224.72135954999578" y2="63.91547869638772" stroke="#999"/>
+  <line x1="256.6311896062463" y1="98.85503233952687" x2="264.7213595499958" y2="92.97717981660215" stroke="#999"/>
+  <line x1="270.0" y1="140.0" x2="280.0" y2="140.0" stroke="#999"/>
+</svg>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-value">100</span>
+                <span class="stat-label">分析记录</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">202</span>
+                <span class="stat-label">检测异常</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">201</span>
+                <span class="stat-label">严重异常</span>
+            </div>
+        </div>
+        </div>
+            </div>
+            <div class="summary-stats">
+                <h3>异常类型分布</h3>
+                <div class="type-stats">
+                    <div class="type-stat-item"><span class="type-dot" style="background: #9C27B0;"></span><span class="type-name">夜间突击补写</span><span class="type-count">1</span></div>
+<div class="type-stat-item"><span class="type-dot" style="background: #FF9800;"></span><span class="type-name">异常修改序列</span><span class="type-count">100</span></div>
+<div class="type-stat-item"><span class="type-dot" style="background: #F44336;"></span><span class="type-name">时间线矛盾</span><span class="type-count">100</span></div>
+<div class="type-stat-item"><span class="type-dot" style="background: #FF5722;"></span><span class="type-name">批处理痕迹</span><span class="type-count">1</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="stratum" class="section">
+            <h2>🗺️ 时序地层图</h2>
+            <p class="section-desc">横向为时间轴，纵向为不同病历章节的地层分布</p>
+            <div class="visualization-container">
+                <div class="empty-state">无地层图数据</div>
+            </div>
+        </section>
+
+        <section id="anomaly-timeline" class="section">
+            <h2>⏱️ 异常时间线</h2>
+            <div class="visualization-container">
+                <div class="empty-state">未检测到异常</div>
+            </div>
+        </section>
+
+        <section id="batch" class="section">
+            <h2>🔥 批处理痕迹热力图</h2>
+            <div class="visualization-container">
+                <div class="empty-state">未检测到批处理痕迹</div>
+            </div>
+        </section>
+
+        <section id="night" class="section">
+            <h2>🌙 夜间活动分析</h2>
+            <div class="visualization-container">
+                <div class="empty-state">未检测到夜间异常活动</div>
+            </div>
+        </section>
+
+        <section id="anomalies" class="section">
+            <h2>⚠️ 异常详情</h2>
+            <div class="anomaly-list">
+                <div class="empty-state">未检测到异常</div>
+            </div>
+        </section>
+
+        <footer class="report-footer">
+            <p>EMR Timestamp Archaeologist | 病历时间戳考古器</p>
+            <p>本报告由 AI 自动生成，仅供辅助参考</p>
+        </footer>
+    </div>
+
+    
+<script>
+// 异常卡片交互
+document.querySelectorAll('.anomaly-card').forEach(card => {
+    card.addEventListener('click', function() {
+        const details = this.querySelector('.anomaly-details');
+        if (details) {
+            details.open = !details.open;
+        }
+    });
+});
+
+// 平滑滚动
+document.querySelectorAll('.toc a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+
+// 图表悬停效果
+document.querySelectorAll('svg circle, svg rect').forEach(elem => {
+    elem.addEventListener('mouseenter', function() {
+        this.style.opacity = '0.7';
+    });
+    elem.addEventListener('mouseleave', function() {
+        this.style.opacity = '1';
+    });
+});
+</script>
+</body>
+</html>

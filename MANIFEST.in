@@ -1,0 +1,25 @@
+include README.md
+include LICENSE
+include requirements.txt
+include buymeacoffee.png
+
+recursive-include src/py *.py
+recursive-include src/py/detectors *.py
+recursive-include data *.xml *.json *.csv
+recursive-include templates *.html *.css *.js
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.pyo
+recursive-exclude * .pytest_cache
+recursive-exclude * .ruff_cache
+recursive-exclude * .mypy_cache
+recursive-exclude * node_modules
+
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .DS_Store
+global-exclude .git*
+global-exclude *.log
+global-exclude *.tmp
+global-exclude *.temp

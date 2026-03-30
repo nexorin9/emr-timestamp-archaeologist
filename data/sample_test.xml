@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<emr_records>
+    <record>
+        <patient_id>P001</patient_id>
+        <visit_id>V001</visit_id>
+        <record_id>R001</record_id>
+        <record_type>入院记录</record_type>
+        <business_time>2024-01-15 09:00:00</business_time>
+        <chapter>
+            <chapter_id>ch_1</chapter_id>
+            <chapter_name>主诉</chapter_name>
+            <created_time>2024-01-15 09:00:00</created_time>
+            <modified_time>2024-01-15 09:00:00</modified_time>
+            <author_id>doctor_wang</author_id>
+        </chapter>
+        <chapter>
+            <chapter_id>ch_2</chapter_id>
+            <chapter_name>现病史</chapter_name>
+            <created_time>2024-01-15 09:05:00</created_time>
+            <modified_time>2024-01-15 09:05:00</modified_time>
+            <author_id>doctor_wang</author_id>
+        </chapter>
+    </record>
+    <record>
+        <patient_id>P002</patient_id>
+        <visit_id>V002</visit_id>
+        <record_id>R002</record_id>
+        <record_type>入院记录</record_type>
+        <business_time>2024-01-15 10:00:00</business_time>
+        <chapter>
+            <chapter_id>ch_1</chapter_id>
+            <chapter_name>主诉</chapter_name>
+            <created_time>2024-01-15 10:00:00</created_time>
+            <modified_time>2024-01-15 10:00:00</modified_time>
+            <author_id>doctor_li</author_id>
+        </chapter>
+        <chapter>
+            <chapter_id>ch_2</chapter_id>
+            <chapter_name>现病史</chapter_name>
+            <created_time>2024-01-15 10:02:00</created_time>
+            <modified_time>2024-01-15 10:02:00</modified_time>
+            <author_id>doctor_li</author_id>
+        </chapter>
+    </record>
+    <record>
+        <patient_id>P003</patient_id>
+        <visit_id>V003</visit_id>
+        <record_id>R003</record_id>
+        <record_type>病程记录</record_type>
+        <business_time>2024-01-16 22:30:00</business_time>
+        <chapter>
+            <chapter_id>ch_1</chapter_id>
+            <chapter_name>日常病程</chapter_name>
+            <created_time>2024-01-16 23:55:00</created_time>
+            <modified_time>2024-01-16 23:55:00</modified_time>
+            <author_id>doctor_zhang</author_id>
+        </chapter>
+    </record>
+</emr_records>

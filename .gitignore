@@ -1,0 +1,72 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Node.js
+node_modules/
+.npm
+.yarn
+.pnp
+.pnp.js
+
+# Testing
+.pytest_cache/
+.coverage
+coverage/
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# Build artifacts
+dist/
+build/
+target/
+*.wasm
+*.d.ts
+*.js.map
+
+# Next.js
+.next/
+.nuxt/
+out/
+
+# Logs
+logs/
+*.log
+*.tmp
+*.temp
+
+# Runtime data
+data/generated/
+data/*.tmp
+data/*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Round metadata
+score.json

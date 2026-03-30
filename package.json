@@ -1,0 +1,51 @@
+{
+  "name": "emr-timestamp-archaeologist",
+  "version": "1.0.0",
+  "description": "病历时间戳考古器 - 用考古学方法分析电子病历时间戳，检测倒填时间、突击补写、批处理造假等异常模式",
+  "type": "module",
+  "main": "dist/cli/index.js",
+  "bin": {
+    "emr-archaeologist": "dist/cli/index.js"
+  },
+  "scripts": {
+    "cli": "node dist/cli/index.js",
+    "build": "tsc && npm run build:python",
+    "build:python": "python -m py_compile src/py/models.py src/py/parser.py src/py/stratum_builder.py src/py/detection_engine.py src/py/report_renderer.py src/py/llm_reporter.py src/py/pipeline.py src/py/config.py src/py/debug_tools.py src/py/cli.py && python -m py_compile src/py/detectors/__init__.py src/py/detectors/batch_detector.py src/py/detectors/night_detector.py src/py/detectors/contradiction_detector.py src/py/detectors/sequence_detector.py",
+    "build:all": "npm run clean && npm run build && npm run test",
+    "dev": "tsc --watch",
+    "dev:full": "./build.sh dev",
+    "test": "npm run test:python && npm run test:js",
+    "test:python": "cd src/py && python -m pytest tests/ -v --tb=short",
+    "test:js": "node --test dist/cli/tests/ 2>/dev/null || echo 'Run npm run build first for JS tests'",
+    "clean": "rm -rf dist/ build/ .pytest_cache/ coverage/ .ruff_cache/ .mypy_cache/ && find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
+    "clean:win": "if exist dist rmdir /s /q dist & if exist build rmdir /s /q build & if exist .pytest_cache rmdir /s /q .pytest_cache",
+    "exe": "python -m PyInstaller --name emr-archaeologist --onefile --console --clean src/py/cli.py",
+    "prepublish": "npm run build"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "chokidar": "^3.6.0",
+    "commander": "^12.0.0",
+    "figlet": "^1.7.0",
+    "inquirer": "^9.2.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.9",
+    "@types/node": "^20.19.37",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.10"
+  },
+  "keywords": [
+    "emr",
+    "electronic-medical-record",
+    "timestamp-analysis",
+    "medical-data",
+    "archaeology",
+    "healthcare"
+  ],
+  "author": "",
+  "license": "Apache-2.0"
+}

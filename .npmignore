@@ -1,0 +1,65 @@
+# EMR Timestamp Archaeologist - .npmignore
+
+# Source files - only publish compiled output
+src/
+*.ts
+!*.d.ts
+
+# Python source - published as separate package
+src/py/
+*.py
+!requirements.txt
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts
+**/test_*.py
+**/tests/
+
+# Build artifacts
+dist/
+build/
+*.pyc
+*.pyo
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+coverage/
+*.log
+*.tmp
+*.temp
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation source
+*.md
+!README.md
+CLAUDE.md
+
+# Round metadata (should not be published)
+score.json
+progress.txt
+ideas.md
+research.md
+discoveries.md
+
+# Development tools
+tsconfig.tsbuildinfo
+node_modules/.cache/
